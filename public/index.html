@@ -1,40 +1,44 @@
-<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Todo 칸반</title>
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light dark"><title>Todo 칸반</title>
 <style>
-body{margin:0;font-family:Pretendard,'Malgun Gothic',system-ui;background:#f6f8f7;color:#1f2937}
+:root{--bg:#f6f8f7;--fg:#1f2937;--panel:#fff;--card:#e8f6ee;--card-done:#f1f2f4;--muted:#6b7280;--green:#12a05c;--dgreen:#0b7a45;--line:#d1d5db;--warn:#fff7d6;--bad:#fde8e8}
+@media(prefers-color-scheme:dark){:root{--bg:#111815;--fg:#e5e7eb;--panel:#1b2420;--card:#20372b;--card-done:#262b29;--muted:#9ca3af;--line:#374151;--warn:#3d3412;--bad:#4a1f1f}}
+body{margin:0;font-family:Pretendard,'Malgun Gothic',system-ui;background:var(--bg);color:var(--fg)}
 header{background:linear-gradient(135deg,#12a05c,#0b7a45);color:#fff;padding:16px 24px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
 header h1{font-size:20px;margin:0;flex:1}header small{opacity:.9}
-button{border:0;border-radius:8px;padding:8px 14px;background:#fff;color:#0b7a45;font-weight:600;cursor:pointer}
+button{border:0;border-radius:8px;padding:8px 14px;background:#fff;color:var(--dgreen);font-weight:600;cursor:pointer}
+button:disabled{opacity:.6;cursor:wait}
 main{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:20px;max-width:1200px;margin:auto}
-@media(max-width:700px){main{grid-template-columns:1fr}}
-.col{background:#fff;border-radius:12px;padding:12px;min-height:60vh;border-top:4px solid #12a05c}
-.col.done{border-color:#6b7280}.col h2{margin:4px 8px 12px;font-size:16px}
-.card{background:#e8f6ee;border-radius:8px;padding:10px 12px;margin-bottom:8px;cursor:grab}
-.done .card{background:#f1f2f4;color:#6b7280}.card b{display:block}.card small{color:#6b7280}
-.card a{color:#0b7a45;font-size:12px}.card .act{float:right}.card .act button{background:#12a05c;color:#fff;padding:3px 8px;font-size:12px}
-.over{outline:2px dashed #12a05c}.stale{opacity:.6}
-#add{display:flex;gap:6px;margin:0 8px 10px}#add input{flex:1;padding:8px;border:1px solid #d1d5db;border-radius:8px}
-#err{background:#fff7d6;padding:8px 24px;display:none}
+@media(max-width:700px){main{grid-template-columns:1fr;padding:12px}}
+.col{background:var(--panel);border-radius:12px;padding:12px;min-height:60vh;border-top:4px solid var(--green)}
+.col.done{border-color:var(--muted)}.col h2{margin:4px 8px 12px;font-size:16px}
+.card{background:var(--card);border-radius:8px;padding:10px 12px;margin-bottom:8px;position:relative;cursor:pointer}
+.done .card{background:var(--card-done);color:var(--muted)}.card b{display:block;word-break:break-all}.card small{color:var(--muted)}
+.card a{color:var(--dgreen);font-size:12px}.card .act{float:right;display:flex;gap:4px}
+.card .act button,.pbtn{background:var(--green);color:#fff;padding:3px 8px;font-size:12px}
+.handle{touch-action:none;cursor:grab;user-select:none;padding:0 6px 0 0;color:var(--muted)}
+.over{outline:2px dashed var(--green)}.stale{opacity:.6}.ghost{position:fixed;z-index:50;pointer-events:none;opacity:.85;width:260px;box-shadow:0 6px 16px #0004}
+.badge{display:inline-block;font-size:11px;border-radius:6px;padding:1px 6px;margin-left:4px;background:var(--line);color:var(--fg)}
+.badge.late{background:#dc2626;color:#fff}.badge.soon{background:#f59e0b;color:#111}.badge.pri{background:var(--dgreen);color:#fff}
+#add{display:flex;gap:6px;margin:0 8px 10px}#add input{flex:1;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--fg)}
+#add button{background:var(--green);color:#fff}
+#err{background:var(--warn);padding:8px 24px;display:none;white-space:pre-line}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:10px 16px;border-radius:8px;display:none;z-index:60}
+#login{position:fixed;inset:0;background:var(--bg);display:none;align-items:center;justify-content:center;z-index:70}
+#login form{background:var(--panel);padding:24px;border-radius:12px;display:grid;gap:10px;width:260px}
+#login input,dialog input,dialog textarea,dialog select{padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--fg);font:inherit;width:100%;box-sizing:border-box}
+#login button,dialog button{background:var(--green);color:#fff}dialog button.sub{background:var(--line);color:var(--fg)}dialog button.danger{background:#dc2626}
+#lerr{color:#dc2626;font-size:13px;min-height:1em}
+dialog{border:0;border-radius:12px;padding:20px;width:min(420px,92vw);background:var(--panel);color:var(--fg)}dialog label{display:block;font-size:12px;color:var(--muted);margin:8px 0 2px}
+dialog .row{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}dialog .info{font-size:12px;color:var(--muted);line-height:1.6}
 </style></head><body>
-<header><h1>Todo 칸반 · cands 동기화</h1><small id="sync"></small><button onclick="doSync()">지금 동기화</button></header>
+<header><h1>Todo 칸반 · cands 동기화</h1><small id="sync">불러오는 중…</small><button id="syncBtn" type="button">지금 동기화</button><button id="logoutBtn" type="button" hidden>로그아웃</button></header>
 <div id="err"></div>
-<main><section class="col" id="doing"><h2>Doing <span id="n1"></span></h2><div id="add"><input id="t" placeholder="직접 추가"><button style="background:#12a05c;color:#fff" onclick="add()">추가</button></div><div class="list"></div></section>
+<main><section class="col" id="doing"><h2>Doing <span id="n1"></span></h2><form id="add"><input id="t" maxlength="200" placeholder="직접 추가 (n)"><button type="submit">추가</button></form><div class="list"></div></section>
 <section class="col done" id="done"><h2>Done <span id="n2"></span></h2><div class="list"></div></section></main>
-<script>
-let pw=localStorage.pw||"";
-async function api(p,body){let r=await fetch("/api/"+p,{method:body?"POST":"GET",headers:{"x-app-password":pw,"content-type":"application/json"},body:body?JSON.stringify(body):undefined});
- if(r.status==401){pw=prompt("비밀번호")||"";localStorage.pw=pw;return api(p,body)}return r.json()}
-function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
-function render(b){
- document.getElementById("sync").textContent="마지막 동기화: "+(b.lastSync?new Date(b.lastSync).toLocaleString("ko-KR"):"없음");
- const e=document.getElementById("err");e.style.display=b.lastError?"block":"none";e.textContent="동기화 오류: "+(b.lastError||"");
- for(const s of ["doing","done"]){const L=document.querySelector("#"+s+" .list");const items=b.items.filter(i=>i.status===s);
-  document.getElementById(s=="doing"?"n1":"n2").textContent="("+items.length+")";
-  L.innerHTML=items.map(i=>`<div class="card ${i.stale?"stale":""}" draggable="true" data-id="${esc(i.id)}"><span class="act"><button onclick="mv('${esc(i.id)}','${s=="doing"?"done":"doing"}')">${s=="doing"?"Done ›":"‹ Doing"}</button></span><b>${esc(i.title)}</b><small>${esc(i.phase)} ${esc((i.nodes||[]).join(", "))}</small> ${i.href?`<a href="${esc(i.href)}" target="_blank">열기</a>`:""}</div>`).join("")}
- document.querySelectorAll(".card").forEach(c=>c.ondragstart=ev=>ev.dataTransfer.setData("id",c.dataset.id))}
-async function mv(id,status){render(await api("move",{id,status}))}
-async function add(){const t=document.getElementById("t");if(!t.value)return;render(await api("add",{title:t.value}));t.value=""}
-async function doSync(){render(await api("sync",{}))}
-document.querySelectorAll(".col").forEach(c=>{c.ondragover=e=>{e.preventDefault();c.classList.add("over")};c.ondragleave=()=>c.classList.remove("over");
- c.ondrop=e=>{e.preventDefault();c.classList.remove("over");mv(e.dataTransfer.getData("id"),c.id)}});
-api("todos").then(b=>{render(b);if(!b.lastSync)doSync()});setInterval(()=>api("todos").then(render),300000);
-</script></body></html>
+<div id="toast"></div>
+<div id="login"><form id="lform"><b>로그인</b><input id="pw" type="password" autocomplete="current-password" placeholder="비밀번호" required><div id="lerr"></div><button type="submit">입장</button></form></div>
+<dialog id="dlg"><form method="dialog" id="dform"><b id="dtitle"></b><div class="info" id="dinfo"></div>
+<label>제목 (직접 추가 카드만 수정 가능)<input id="f_title" maxlength="200"></label><label>메모<textarea id="f_memo" rows="3" maxlength="2000"></textarea></label>
+<label>마감일<input id="f_due" type="date"></label><label>우선순위<select id="f_pri"><option value="">-</option><option>상</option><option>중</option><option>하</option></select></label><label>담당<input id="f_owner" maxlength="50"></label>
+<div class="row"><button type="submit" id="dsave">저장</button><button type="button" class="danger" id="ddel"></button><button type="button" class="sub" id="dclose">닫기</button></div></form></dialog>
+<script src="/app.js"></script></body></html>
